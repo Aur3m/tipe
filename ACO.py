@@ -21,21 +21,21 @@ Gérer les cas où on n'aura pas de quoi tout livrer? privilegier la plus grande
 
 
 # à refaire
-def read_file():
-    input_file = open('data.txt', 'r')
-    nodes_position = []
-    nodes_load = []
-    for i, line in enumerate(input_file):
-        values = line.split(' ')
-        if i == 0:
-            n_tours = int(values[0])
-            init_capacity = int(values[1])
-        else:
-            if int(values[3]) == 0:
-                depot = int(values[0]) - 1
-            nodes_position.append([int(values[1]), int(values[2])])
-            nodes_load.append(int(values[3]))
-    input_file.close()
+def read_file(name):
+    with open(name + '.txt', 'r') as input_file:
+        nodes_position = []
+        nodes_load = []
+        for i, line in enumerate(input_file):
+            values = line.split(' ')
+            if i == 0:
+                n_tours = int(values[0])
+                init_capacity = int(values[1])
+            else:
+                print(values)
+                if int(values[3]) == 0:
+                    depot = int(values[0]) - 1
+                nodes_position.append([int(values[1]), int(values[2])])
+                nodes_load.append(int(values[3]))
     n_nodes = len(nodes_position)
     nodes_position = np.array(nodes_position)
     nodes_load = np.array(nodes_load)
@@ -47,11 +47,12 @@ def get_distances(nodes_position):
     n = len(nodes_position)
     distances = np.zeros((n, n))
     for i in range(n):
-        for j in range(n):
+        for j in range(i+1, n):  # Profitez de la symétrie de la distance
             if i != j:
                 dx = nodes_position[i][0] - nodes_position[j][0]
                 dy = nodes_position[i][1] - nodes_position[j][1]
                 distances[i][j] = np.sqrt(dx * dx + dy * dy)
+                distances[j][i] = distances[i][j]  # Utilisez la symétrie pour éviter des calculs redondants
     return distances
 
 #à refaire
@@ -117,11 +118,11 @@ def evaporation(pheromone, best_ants_location, n_nodes, distances, rho):
 
 
 # Fonction principale
-def VRP(nb_iterations, alpha, beta, gamma):
+def VRP(nb_iterations, alpha, beta, gamma,test):
     # alpha est le coefficient d'importance des distances dans la pondération
     # beta celui des phéromones
     # gamma le coefficient d'évaporation des phéromones
-    nb_dest, nb_camions, capacite, entrepot, pos_dest, quantite_dest = read_file()
+    nb_dest, nb_camions, capacite, entrepot, pos_dest, quantite_dest = read_file(test)
     distances = get_distances(pos_dest)
     visibility = calculate_visibility(nb_dest, distances)
     mat_phero = init_mat_phero(nb_dest)
@@ -184,7 +185,6 @@ def VRP(nb_iterations, alpha, beta, gamma):
 
         # Evaporation des phéromones (pour éviter de converger vers des optimums locaux)
         mat_phero = evaporation(mat_phero, best_itinerary, nb_dest, distances, gamma)
-
     return best_sol_dist, best_itinerary #interessant de tout garder si on veut analyser la convergence
 
 def tracer_itineraire(destinations, itineraire):
@@ -239,13 +239,13 @@ def tracer_evolution_longueurs(longueurs):
     plt.title('Évolution des longueurs au fil du temps')
     plt.grid(True)
     plt.show()
-def test(iterations):
-    longueurs, itineraire_final = VRP(iterations, 1, 8, 0.85)
+def test(iterations,test_name):
+    longueurs, itineraire_final = VRP(iterations, 1.5, 4, 0.85,test_name)
     itineraire_final = itineraire_final+[0]
     print(itineraire_final)
-    nb_dest, nb_camions, capacite, entrepot, pos_dest, quantite_dest = read_file()
+    nb_dest, nb_camions, capacite, entrepot, pos_dest, quantite_dest = read_file(test_name)
     tracer_itineraire(pos_dest,itineraire_final)
     tracer_evolution_longueurs(longueurs)
 
 
-test(2)
+test(100,"archipels")
