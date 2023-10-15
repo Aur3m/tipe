@@ -31,7 +31,6 @@ def read_file(name):
                 n_tours = int(values[0])
                 init_capacity = int(values[1])
             else:
-                print(values)
                 if int(values[3]) == 0:
                     depot = int(values[0]) - 1
                 nodes_position.append([int(values[1]), int(values[2])])
@@ -248,4 +247,4 @@ def test(iterations,test_name):
     tracer_evolution_longueurs(longueurs)
 
 
-test(100,"archipels")
+test(100,"archipels_big")
