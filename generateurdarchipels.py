@@ -3,11 +3,11 @@ import math
 import matplotlib.pyplot as plt
 
 # Nombre d'archipels et de villes par archipel
-num_archipels = 5
-villes_par_archipel = 15
+num_archipels = 15
+villes_par_archipel = 13
 
 # Coordonnées des archipels
-archipels = [(random.randint(0, 200), random.randint(0, 200)) for _ in range(num_archipels)]
+archipels = [(random.randint(0, 500), random.randint(0, 500)) for _ in range(num_archipels)]
 
 # Génération des coordonnées des villes
 villes = []
@@ -34,7 +34,7 @@ barycentre_x = total_x / len(villes)
 barycentre_y = total_y / len(villes)
 
 # Création de la batterie de test avec le barycentre comme première ville
-test_battery = [(1, barycentre_x, barycentre_y, 0)]
+test_battery = [(1, round(barycentre_x), round(barycentre_y), 0)]
 
 # Ajout des autres villes avec leur valeur aléatoire
 for i, (x, y) in enumerate(villes):
@@ -44,8 +44,6 @@ for i, (x, y) in enumerate(villes):
     # Affichage des résultats
 for ville in test_battery:
     print(ville[0], ville[1], ville[2], ville[3])
-
-print("\nBarycentre:", round(barycentre_x, 2), round(barycentre_y, 2))
 
 
 # Fonction de visualisation des villes et du barycentre

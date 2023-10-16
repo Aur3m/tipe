@@ -3,11 +3,11 @@ import random
 import matplotlib.pyplot as plt
 
 # Nombre de villes
-num_villes = 100
+num_villes = 250
 
 # Type de configuration
 # ['cercle', 'spirale', 'gribouillage', 'etoile', 'flots', 'grille', 'clusters', 'ligne', 'border','croix','serpentins','cercles_concentriques']
-config_type = 'clusters'  # Choisir le type de configuration ici
+config_type = 'border'  # Choisir le type de configuration ici
 
 # Coordonnées des villes
 villes = []
