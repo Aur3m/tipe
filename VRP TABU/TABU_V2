@@ -41,17 +41,31 @@ def calculate_distances(nodes_position):
 
 # Greedy initial solution
 def initial_solution(distances, demands, vehicle_capacity):
-    route = [0]
+    n = len(distances)
+    route = [0]  # Start at the depot
     remaining_capacity = vehicle_capacity
-    for i in range(1, len(distances)):
-        if demands[i] <= remaining_capacity:
-            route.append(i)
-            remaining_capacity -= demands[i]
+
+    visited = set([0])  # Start with the depot as visited
+    while len(visited) < n:
+        last_node = route[-1]
+        nearest_neighbor = None
+        min_distance = float('inf')
+
+        for i in range(n):
+            if i not in visited and demands[i] <= remaining_capacity:
+                distance_to_i = distances[last_node][i]
+                if distance_to_i < min_distance:
+                    nearest_neighbor = i
+                    min_distance = distance_to_i
+
+        if nearest_neighbor is not None:
+            route.append(nearest_neighbor)
+            remaining_capacity -= demands[nearest_neighbor]
+            visited.add(nearest_neighbor)
         else:
             route.append(0)  # Return to depot
             remaining_capacity = vehicle_capacity
-            route.append(i)
-            remaining_capacity -= demands[i]
+
     route.append(0)  # Return to depot at the end
     return route
 
@@ -199,6 +213,7 @@ def test(iterations, test_name):
     nb_dest, nb_camions, capacite, entrepot, pos_dest, quantite_dest = read_file(test_name)
     distances = calculate_distances(pos_dest)
     initial_route = initial_solution(distances, quantite_dest, capacite)
+    #initial_route = [0, 97, 99, 93, 98, 94, 95, 104, 100, 0, 96, 103, 92, 102, 101, 127, 121, 124, 125, 0, 173, 170, 182, 175, 176, 174, 181, 180, 178, 179, 0, 59, 53, 65, 55, 116, 56, 58, 61, 64, 0, 164, 129, 119, 162, 161, 168, 163, 167, 169, 165, 0, 172, 177, 171, 3, 2, 12, 11, 1, 10, 0, 123, 126, 158, 157, 159, 122, 120, 118, 128, 166, 130, 0, 73, 71, 66, 74, 75, 78, 69, 115, 113, 106, 108, 62, 68, 117, 57, 67, 0, 63, 112, 111, 110, 60, 105, 107, 54, 0, 114, 72, 76, 77, 70, 109, 141, 143, 0, 81, 84, 80, 85, 79, 86, 38, 91, 88, 89, 87, 82, 0, 4, 6, 9, 7, 8, 5, 13, 83, 27, 160, 0, 133, 136, 132, 134, 137, 131, 140, 138, 139, 135, 142, 0, 51, 40, 46, 49, 50, 45, 42, 47, 52, 44, 48, 0, 43, 41, 17, 20, 22, 192, 184, 152, 155, 0, 154, 147, 151, 146, 145, 149, 144, 148, 150, 153, 156, 194, 186, 0, 25, 19, 26, 16, 18, 23, 24, 21, 14, 15, 0, 34, 39, 35, 30, 28, 29, 37, 33, 32, 31, 90, 36, 0, 193, 191, 189, 188, 190, 195, 183, 187, 185, 0]
     best_route, best_cost, longueurs = tabu_search(initial_route, distances, quantite_dest, capacite, iterations, math.ceil(nb_dest/5))
 
     # Ajoutez le point de départ à la fin de l'itinéraire pour compléter le cycle
@@ -216,3 +231,4 @@ def test(iterations, test_name):
 # Example usage
 
 test(500,"archipels_big")
+
