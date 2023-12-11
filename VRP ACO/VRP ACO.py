@@ -1,5 +1,6 @@
 import numpy as np
 import random
+import math
 import matplotlib.pyplot as plt
 import matplotlib
 from matplotlib.patches import FancyArrowPatch
@@ -20,7 +21,28 @@ dans une certaine fenêtre de temps, cela posera un problème
 
 Gérer les cas où on n'aura pas de quoi tout livrer? privilegier la plus grande livraison ?
 """
+def get_distance_for_solution(soln: list):
+    d=0
+    prev=soln[0]
+    for client in soln[1:]:
+        d += get_distance(prev, client)
+        prev=client
+    return d
 
+def get_distances(nodes_position):
+    n = len(nodes_position)
+    distances = np.zeros((n, n))
+    for i in range(n):
+        for j in range(i+1, n):  # Profitez de la symétrie de la distance
+            if i != j:
+                dx = nodes_position[i][0] - nodes_position[j][0]
+                dy = nodes_position[i][1] - nodes_position[j][1]
+                distances[i][j] = np.sqrt(dx * dx + dy * dy)
+                distances[j][i] = distances[i][j]  # Utilisez la symétrie pour éviter des calculs redondants
+    return distances
+
+def get_distance(src, dest):
+    return distance_mtrx[src][dest]
 # à refaire
 def read_file(name):
     with open(name + '.txt', 'r') as input_file:
@@ -126,7 +148,7 @@ def VRP(nb_iterations, alpha, beta, gamma,test):
     distances = get_distances(pos_dest)
     visibility = calculate_visibility(nb_dest, distances)
     mat_phero = init_mat_phero(nb_dest)
-    nb_fourmis = nb_dest # Il faut que ça soit proportionnel au nombre de destinations
+    nb_fourmis = math.ceil(nb_dest/3) # Il faut que ça soit proportionnel au nombre de destinations?
 
     # en général on a "f_" qui est là pour "fourmis_"
     f_distances = np.zeros((nb_iterations, nb_fourmis))
@@ -179,10 +201,10 @@ def VRP(nb_iterations, alpha, beta, gamma,test):
 
         # On regarde la meilleure fourmi sur toutes les fourmis pour cette itération
         best_f = np.argmin(f_distances[iteration])
-        best_sol_dist[iteration] = f_distances[iteration][best_f]
+        best_sol_dist[iteration] = get_distance_for_solution(f_chemin[best_f]+[0])
         if best_sol_dist[iteration] < min_dist:
             min_dist = best_sol_dist[iteration]
-            print("nouvelle distance ", min_dist)
+            print("nouvelle distance ", get_distance_for_solution(f_chemin[best_f]+[0]), len(f_chemin[best_f]), len(set(f_chemin[best_f])),f_chemin[best_f])
             best_itinerary = f_chemin[best_f]
 
         # Evaporation des phéromones (pour éviter de converger vers des optimums locaux)
@@ -267,8 +289,11 @@ def tracer_evolution_longueurs(longueurs):
     plt.grid(True)
     plt.show()
 def test(iterations, test_name):
+    nb_dest, nb_camions, capacite, entrepot, pos_dest, quantite_dest = read_file(test_name)
+    global distance_mtrx
+    distance_mtrx = get_distances(pos_dest)
     # Exécutez la fonction VRP et obtenez les longueurs et l'itinéraire final
-    longueurs, itineraire_final = VRP(iterations, 1.5, 4, 0.85, test_name)
+    longueurs, itineraire_final = VRP(iterations, 1.5, 7, 0.4, test_name)
 
     # Ajoutez le point de départ à la fin de l'itinéraire pour compléter le cycle
     itineraire_final = itineraire_final + [0]
@@ -285,4 +310,4 @@ def test(iterations, test_name):
 
 # Lors de l'exécution du test, les données seront maintenant sauvegardées dans 'data_vrp.pkl'.
 
-test(10000,"archipels_small")
+test(100,"archipels_big")
