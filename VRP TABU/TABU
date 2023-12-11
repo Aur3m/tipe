@@ -91,7 +91,7 @@ def is_feasible(route, demands, vehicle_capacity):
     return True
 
 
-# Generate neighbors for the Tabu Search
+# Génération NAIVE de voisins (inversements)
 def generate_neighbors(route, distances, demands, vehicle_capacity):
     neighbors = []
     for i in range(1, len(route) - 1):
@@ -101,6 +101,53 @@ def generate_neighbors(route, distances, demands, vehicle_capacity):
                 new_route[i], new_route[j] = new_route[j], new_route[i]
                 if is_feasible(new_route, demands, vehicle_capacity):
                     neighbors.append(new_route)
+    return neighbors
+#INsertion
+def generate_insertion_neighbors(route, distances, demands, vehicle_capacity):
+    neighbors = []
+    for i in range(1, len(route) - 1):
+        for j in range(1, len(route) - 1):
+            if i != j and route[i] != 0:
+                new_route = copy.deepcopy(route)
+                node_to_move = new_route.pop(i)
+                new_route.insert(j, node_to_move)
+                if is_feasible(new_route, demands, vehicle_capacity):
+                    neighbors.append(new_route)
+    return neighbors
+
+#inversion
+def generate_inversion_neighbors(route, distances, demands, vehicle_capacity):
+    neighbors = []
+    for i in range(1, len(route) - 2):
+        for j in range(i + 1, len(route) - 1):
+            new_route = copy.deepcopy(route)
+            new_route[i:j] = new_route[i:j][::-1]  # Invert the sequence
+            if is_feasible(new_route, demands, vehicle_capacity):
+                neighbors.append(new_route)
+    return neighbors
+#echange de tournées
+def generate_cross_tour_swap_neighbors(route, distances, demands, vehicle_capacity):
+    neighbors = []
+    n = len(route)
+    tour_indices = [i for i, node in enumerate(route) if node == 0]  # Indices des dépôts
+
+    # Parcourir chaque paire de tournées
+    for i in range(len(tour_indices) - 1):
+        for j in range(i + 1, len(tour_indices) - 1):
+            tour_start1 = tour_indices[i]
+            tour_end1 = tour_indices[i + 1]
+            tour_start2 = tour_indices[j]
+            tour_end2 = tour_indices[j + 1] if j + 1 < len(tour_indices) else n
+
+            # Échanger des éléments entre les tournées
+            for idx1 in range(tour_start1 + 1, tour_end1):  # Éviter les dépôts
+                for idx2 in range(tour_start2 + 1, tour_end2):  # Éviter les dépôts
+                    if idx1 != idx2:
+                        new_route = copy.deepcopy(route)
+                        new_route[idx1], new_route[idx2] = new_route[idx2], new_route[idx1]
+                        if is_feasible(new_route, demands, vehicle_capacity):
+                            neighbors.append(new_route)
+
     return neighbors
 
 
@@ -113,7 +160,11 @@ def tabu_search(initial_route, distances, demands, vehicle_capacity, iterations,
 
     for i in range(iterations):
         print("iteration n° ",i)
+
         neighbors = generate_neighbors(best_solution, distances, demands, vehicle_capacity)
+        neighbors.extend(generate_insertion_neighbors(best_solution, distances, demands, vehicle_capacity))
+        neighbors.extend(generate_inversion_neighbors(best_solution, distances, demands, vehicle_capacity))
+        neighbors.extend(generate_cross_tour_swap_neighbors(best_solution, distances, demands, vehicle_capacity))
         neighbors.sort(key=lambda x: calculate_route_length(x, distances))
 
         for neighbor in neighbors:
@@ -231,4 +282,5 @@ def test(iterations, test_name):
 # Example usage
 
 test(500,"archipels_big")
+
 
