@@ -214,55 +214,36 @@ def VRP(nb_iterations, alpha, beta, gamma,test):
 def tracer_itineraire(destinations, itineraire, charges):
     fig, ax = plt.subplots()
 
-    # Création d'une colormap basée sur les charges
-    cmap = matplotlib.colormaps.get_cmap('viridis')
-    norm = plt.Normalize(vmin=min(charges), vmax=max(charges))
+    # Utiliser la palette tab20 pour des couleurs distinctes
+    cmap = plt.cm.tab20
+    norm = plt.Normalize(vmin=0, vmax=len(itineraire))
 
-    # Tracer les destinations avec des couleurs basées sur les charges
+    camion_color = {}
+    camion_index = 0
+    for i, stop in enumerate(itineraire):
+        if stop == itineraire[0]:
+            camion_index += 1
+        camion_color[stop] = camion_index
+
     for i, dest in enumerate(destinations):
-        color = cmap(norm(charges[i]))  # Obtention de la couleur basée sur la charge
+        color = cmap(norm(camion_color[i])) if i in camion_color else 'gray'
         if i == 0:
-            ax.plot(dest[0], dest[1], marker='^', color=color, markersize=10, label='Entrepôt')
+            ax.plot(dest[0], dest[1], marker='^', color='red', markersize=10, label='Entrepôt')
         else:
             ax.plot(dest[0], dest[1], marker='o', color=color, markersize=8)
 
-    # Fonction pour ajouter des flèches intermédiaires le long d'une ligne entre deux points
-    """def add_arrows_along_line(ax, start, end):
-        # Calculer la distance entre les points
-        line = np.array([end[0] - start[0], end[1] - start[1]])
-        line_len = np.sqrt(line[0]**2 + line[1]**2)
-
-        # Calculer le nombre de flèches intermédiaires, en fonction de la longueur de la ligne
-        num_arrows = max(int(line_len // 5), 1)  # Par exemple, une flèche pour chaque 5 unités de distance
-
-        # Calculer la direction de la ligne
-        line_dir = line / line_len
-
-        # Créer des points le long de la ligne pour placer les flèches
-        for i in range(1, num_arrows + 1):
-            point = start + line_dir * (line_len * i / (num_arrows + 1))
-            arrow = FancyArrowPatch(point, point + line_dir * 0.1, color='black', arrowstyle='->', mutation_scale=5, alpha=0.6)  # Taille et opacité réduites
-            ax.add_patch(arrow)"""
-
-    # Tracer les flèches principales et intermédiaires indiquant l'itinéraire
-    for i in range(len(itineraire) - 1):
-        start_idx = itineraire[i]
-        end_idx = itineraire[i + 1]
-
+    start_idx = itineraire[0]
+    for i in range(1, len(itineraire)):
+        end_idx = itineraire[i]
         start = destinations[start_idx]
         end = destinations[end_idx]
-
-        # Tracer la flèche principale droite
         arrow_main = FancyArrowPatch(start, end, color='black', arrowstyle='-|>', mutation_scale=15)
         ax.add_patch(arrow_main)
+        start_idx = end_idx
 
-        # Ajout des flèches intermédiaires le long de la ligne
-        """add_arrows_along_line(ax, np.array(start), np.array(end))"""
-
-    # Ajout d'une légende pour la colormap
     sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
     sm.set_array([])
-    plt.colorbar(sm, ax=ax, label='Charge')
+    plt.colorbar(sm, ax=ax, label='Camion')
 
     ax.set_xlim(min(dest[0] for dest in destinations) - 1, max(dest[0] for dest in destinations) + 1)
     ax.set_ylim(min(dest[1] for dest in destinations) - 1, max(dest[1] for dest in destinations) + 1)
@@ -271,23 +252,14 @@ def tracer_itineraire(destinations, itineraire, charges):
     plt.show()
 
 def tracer_evolution_longueurs(longueurs):
-    """
-    Trace l'évolution des longueurs d'une liste au fil du temps.
-
-    Args:
-    longueurs (list): La liste dont l'évolution des longueurs doit être tracée.
-    """
-
-    # Créer une liste d'indices pour les points de données
     indices = range(1, len(longueurs) + 1)
-
-    # Tracer l'évolution des longueurs
     plt.plot(indices, longueurs, linestyle='-')
     plt.xlabel('Temps')
     plt.ylabel('Longueur')
     plt.title('Évolution des longueurs au fil du temps')
     plt.grid(True)
     plt.show()
+    
 def test(iterations, test_name):
     nb_dest, nb_camions, capacite, entrepot, pos_dest, quantite_dest = read_file(test_name)
     global distance_mtrx
