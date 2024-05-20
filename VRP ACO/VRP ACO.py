@@ -216,12 +216,12 @@ def tracer_itineraire(destinations, itineraire, charges):
 
     # Utiliser la palette tab20 pour des couleurs distinctes
     cmap = plt.cm.tab20
-    norm = plt.Normalize(vmin=0, vmax=len(itineraire))
+    norm = plt.Normalize(vmin=0, vmax=20)  # tab20 a 20 couleurs distinctes
 
     camion_color = {}
     camion_index = 0
     for i, stop in enumerate(itineraire):
-        if stop == itineraire[0]:
+        if stop == 0:
             camion_index += 1
         camion_color[stop] = camion_index
 
@@ -259,7 +259,7 @@ def tracer_evolution_longueurs(longueurs):
     plt.title('Évolution des longueurs au fil du temps')
     plt.grid(True)
     plt.show()
-    
+
 def test(iterations, test_name):
     nb_dest, nb_camions, capacite, entrepot, pos_dest, quantite_dest = read_file(test_name)
     global distance_mtrx
