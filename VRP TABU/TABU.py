@@ -94,9 +94,14 @@ def is_feasible(route, demands, vehicle_capacity):
 # Génération NAIVE de voisins (inversements)
 def generate_neighbors(route, distances, demands, vehicle_capacity):
     neighbors = []
-    for i in range(1, len(route) - 1):
-        for j in range(i + 1, len(route)):
-            if i != j and not (route[i] == 0 or route[j] == 0):
+    # Identifier les points de départ de chaque tournée
+    start_indices = [i for i, value in enumerate(route) if value == 0]
+    start_indices.append(len(route))  # Ajouter la fin du dernier segment
+
+    # Itérer sur chaque segment de tournée
+    for start, end in zip(start_indices, start_indices[1:]):
+        for i in range(start + 1, end - 1):
+            for j in range(i + 1, end):
                 new_route = copy.deepcopy(route)
                 new_route[i], new_route[j] = new_route[j], new_route[i]
                 if is_feasible(new_route, demands, vehicle_capacity):
