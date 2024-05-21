@@ -232,55 +232,36 @@ def tabu_search(initial_route, distances, demands, vehicle_capacity, iterations,
 def tracer_itineraire(destinations, itineraire, charges):
     fig, ax = plt.subplots()
 
-    # Création d'une colormap basée sur les charges
-    cmap = matplotlib.colormaps.get_cmap('viridis')
-    norm = plt.Normalize(vmin=min(charges), vmax=max(charges))
+    # Utiliser la palette tab20 pour des couleurs distinctes
+    cmap = plt.cm.tab20
+    norm = plt.Normalize(vmin=0, vmax=20)  # tab20 a 20 couleurs distinctes
 
-    # Tracer les destinations avec des couleurs basées sur les charges
+    camion_color = {}
+    camion_index = 0
+    for i, stop in enumerate(itineraire):
+        if stop == 0:
+            camion_index += 1
+        camion_color[stop] = camion_index
+
     for i, dest in enumerate(destinations):
-        color = cmap(norm(charges[i]))  # Obtention de la couleur basée sur la charge
+        color = cmap(norm(camion_color[i])) if i in camion_color else 'gray'
         if i == 0:
-            ax.plot(dest[0], dest[1], marker='^', color=color, markersize=10, label='Entrepôt')
+            ax.plot(dest[0], dest[1], marker='^', color='red', markersize=10, label='Entrepôt')
         else:
             ax.plot(dest[0], dest[1], marker='o', color=color, markersize=8)
 
-    # Fonction pour ajouter des flèches intermédiaires le long d'une ligne entre deux points
-    """def add_arrows_along_line(ax, start, end):
-        # Calculer la distance entre les points
-        line = np.array([end[0] - start[0], end[1] - start[1]])
-        line_len = np.sqrt(line[0]**2 + line[1]**2)
-
-        # Calculer le nombre de flèches intermédiaires, en fonction de la longueur de la ligne
-        num_arrows = max(int(line_len // 5), 1)  # Par exemple, une flèche pour chaque 5 unités de distance
-
-        # Calculer la direction de la ligne
-        line_dir = line / line_len
-
-        # Créer des points le long de la ligne pour placer les flèches
-        for i in range(1, num_arrows + 1):
-            point = start + line_dir * (line_len * i / (num_arrows + 1))
-            arrow = FancyArrowPatch(point, point + line_dir * 0.1, color='black', arrowstyle='->', mutation_scale=5, alpha=0.6)  # Taille et opacité réduites
-            ax.add_patch(arrow)"""
-
-    # Tracer les flèches principales et intermédiaires indiquant l'itinéraire
-    for i in range(len(itineraire) - 1):
-        start_idx = itineraire[i]
-        end_idx = itineraire[i + 1]
-
+    start_idx = itineraire[0]
+    for i in range(1, len(itineraire)):
+        end_idx = itineraire[i]
         start = destinations[start_idx]
         end = destinations[end_idx]
-
-        # Tracer la flèche principale droite
         arrow_main = FancyArrowPatch(start, end, color='black', arrowstyle='-|>', mutation_scale=15)
         ax.add_patch(arrow_main)
+        start_idx = end_idx
 
-        # Ajout des flèches intermédiaires le long de la ligne
-        """add_arrows_along_line(ax, np.array(start), np.array(end))"""
-
-    # Ajout d'une légende pour la colormap
     sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
     sm.set_array([])
-    plt.colorbar(sm, ax=ax, label='Charge')
+    plt.colorbar(sm, ax=ax, label='Camion')
 
     ax.set_xlim(min(dest[0] for dest in destinations) - 1, max(dest[0] for dest in destinations) + 1)
     ax.set_ylim(min(dest[1] for dest in destinations) - 1, max(dest[1] for dest in destinations) + 1)
@@ -289,30 +270,33 @@ def tracer_itineraire(destinations, itineraire, charges):
     plt.show()
 
 def tracer_evolution_longueurs(longueurs):
-    """
-    Trace l'évolution des longueurs d'une liste au fil du temps.
-
-    Args:
-    longueurs (list): La liste dont l'évolution des longueurs doit être tracée.
-    """
-
-    # Créer une liste d'indices pour les points de données
     indices = range(1, len(longueurs) + 1)
-
-    # Tracer l'évolution des longueurs
     plt.plot(indices, longueurs, linestyle='-')
     plt.xlabel('Temps')
     plt.ylabel('Longueur')
     plt.title('Évolution des longueurs au fil du temps')
     plt.grid(True)
     plt.show()
+
 def test(iterations, test_name):
     nb_dest, nb_camions, capacite, entrepot, pos_dest, quantite_dest = read_file(test_name)
     distances = calculate_distances(pos_dest)
     initial_route = initial_solution(distances, quantite_dest, capacite)
     #initial_route = [0, 59, 54, 58, 52, 56, 48, 50, 51, 0, 53, 60, 49, 55, 61, 0, 57, 62, 47, 40, 0, 26, 21, 30, 22, 0, 20, 19, 24, 28, 29, 27, 0, 18, 31, 25, 23, 0, 71, 66, 78, 63, 76, 70, 77, 67, 0, 69, 65, 35, 32, 46, 36, 0, 33, 38, 39, 43, 0, 74, 73, 75, 72, 68, 64, 0, 41, 1, 14, 17, 0, 4, 13, 7, 8, 0, 42, 45, 44, 37, 34, 0, 12, 3, 16, 2, 9, 15, 11, 0, 10, 6, 5]
     #initial_route = [0, 97, 99, 93, 98, 94, 95, 104, 100, 0, 96, 103, 92, 102, 101, 127, 121, 124, 125, 0, 173, 170, 182, 175, 176, 174, 181, 180, 178, 179, 0, 59, 53, 65, 55, 116, 56, 58, 61, 64, 0, 164, 129, 119, 162, 161, 168, 163, 167, 169, 165, 0, 172, 177, 171, 3, 2, 12, 11, 1, 10, 0, 123, 126, 158, 157, 159, 122, 120, 118, 128, 166, 130, 0, 73, 71, 66, 74, 75, 78, 69, 115, 113, 106, 108, 62, 68, 117, 57, 67, 0, 63, 112, 111, 110, 60, 105, 107, 54, 0, 114, 72, 76, 77, 70, 109, 141, 143, 0, 81, 84, 80, 85, 79, 86, 38, 91, 88, 89, 87, 82, 0, 4, 6, 9, 7, 8, 5, 13, 83, 27, 160, 0, 133, 136, 132, 134, 137, 131, 140, 138, 139, 135, 142, 0, 51, 40, 46, 49, 50, 45, 42, 47, 52, 44, 48, 0, 43, 41, 17, 20, 22, 192, 184, 152, 155, 0, 154, 147, 151, 146, 145, 149, 144, 148, 150, 153, 156, 194, 186, 0, 25, 19, 26, 16, 18, 23, 24, 21, 14, 15, 0, 34, 39, 35, 30, 28, 29, 37, 33, 32, 31, 90, 36, 0, 193, 191, 189, 188, 190, 195, 183, 187, 185, 0]
-    initial_route = [0, 59, 54, 58, 52, 56, 48, 50, 51, 0, 49, 60, 53, 55, 61, 0, 20, 19, 24, 21, 28, 0, 57, 62, 33, 38, 47, 0, 26, 18, 29, 27, 0, 67, 65, 70, 78, 66, 71, 77, 0, 6, 10, 5, 8, 7, 0, 1, 14, 17, 13, 0, 34, 45, 35, 37, 44, 0, 69, 74, 75, 73, 72, 68, 0, 64, 63, 76, 42, 40, 0, 36, 46, 32, 41, 0, 3, 12, 16, 2, 9, 15, 11, 0, 31, 23, 25, 22, 30, 0, 39, 43, 4]
+    #initial_route = [0, 59, 54, 58, 52, 56, 48, 50, 51, 0, 49, 60, 53, 55, 61, 0, 20, 19, 24, 21, 28, 0, 57, 62, 33, 38, 47, 0, 26, 18, 29, 27, 0, 67, 65, 70, 78, 66, 71, 77, 0, 6, 10, 5, 8, 7, 0, 1, 14, 17, 13, 0, 34, 45, 35, 37, 44, 0, 69, 74, 75, 73, 72, 68, 0, 64, 63, 76, 42, 40, 0, 36, 46, 32, 41, 0, 3, 12, 16, 2, 9, 15, 11, 0, 31, 23, 25, 22, 30, 0, 39, 43, 4]
+    #initial_route = [0, 97, 102, 103, 92, 101, 126, 128, 118, 120, 0, 96, 99, 98, 93, 95, 94, 104, 100, 0, 123, 158, 82, 87, 28, 29, 37, 33, 30, 89, 84, 168, 122, 0, 172, 177, 171, 3, 1, 10, 11, 166, 0, 59, 65, 53, 55, 116, 58, 61, 64, 54, 0, 107, 56, 60, 112, 67, 111, 110, 62, 68, 117, 57, 108, 106, 0, 173, 170, 178, 180, 181, 174, 176, 175, 182, 179, 0, 63, 72, 76, 77, 70, 109, 115, 69, 113, 105, 0, 127, 121, 124, 125, 157, 159, 160, 83, 27, 79, 86, 0, 143, 141, 78, 75, 74, 66, 71, 73, 114, 0, 165, 169, 130, 129, 164, 161, 119, 162, 167, 163, 0, 24, 21, 14, 15, 22, 17, 20, 18, 0, 138, 140, 139, 135, 142, 134, 137, 131, 136, 132, 133, 0, 7, 9, 6, 4, 8, 5, 12, 13, 2, 0, 186, 185, 183, 25, 19, 26, 16, 23, 41, 43, 0, 154, 193, 184, 192, 191, 189, 190, 195, 187, 188, 194, 0, 144, 149, 148, 151, 147, 146, 145, 153, 156, 155, 150, 152, 0, 81, 88, 91, 38, 80, 85, 31, 36, 90, 32, 39, 34, 35, 0, 52, 44, 49, 40, 46, 51, 50, 45, 42, 47, 48, 0]
+    initial_route = [0, 97, 96, 103, 92, 101, 125, 124, 121, 127, 123, 0, 102, 99, 98, 93, 95, 94, 104, 100, 0, 53, 65,
+                     55, 116, 56, 58, 61, 64, 54, 0, 59, 63, 60, 112, 67, 111, 110, 106, 108, 62, 0, 126, 120, 122, 118,
+                     128, 158, 157, 159, 163, 168, 161, 0, 177, 172, 171, 179, 174, 176, 175, 182, 170, 173, 0, 35, 30,
+                     28, 29, 33, 87, 89, 36, 90, 27, 0, 107, 113, 69, 115, 78, 75, 114, 117, 57, 68, 105, 109, 0, 180,
+                     178, 181, 9, 6, 8, 5, 1, 11, 0, 130, 169, 166, 167, 119, 162, 129, 164, 165, 0, 81, 84, 79, 86, 85,
+                     80, 38, 91, 31, 32, 39, 34, 37, 82, 0, 74, 66, 77, 76, 72, 73, 71, 70, 143, 141, 0, 139, 135, 142,
+                     131, 134, 137, 140, 138, 133, 136, 132, 0, 7, 4, 2, 3, 12, 13, 10, 88, 83, 160, 0, 152, 190, 195,
+                     24, 21, 14, 15, 22, 26, 0, 185, 192, 189, 191, 188, 184, 193, 194, 186, 187, 183, 0, 25, 19, 23,
+                     16, 18, 20, 17, 41, 43, 0, 52, 44, 49, 51, 50, 40, 46, 42, 47, 45, 48, 0, 151, 147, 148, 144, 149,
+                     145, 146, 153, 156, 150, 155, 154]
+    #initial_route = [0, 97, 96, 95, 94, 93, 98, 99, 0, 127, 126, 92, 101, 103, 100, 104, 102, 0, 53, 65, 55, 56, 58, 61, 64, 59, 0, 82, 27, 89, 87, 36, 37, 33, 29, 28, 30, 35, 124, 0, 173, 170, 182, 175, 176, 174, 179, 171, 177, 172, 0, 166, 128, 118, 120, 122, 158, 159, 125, 121, 0, 63, 114, 60, 67, 112, 111, 110, 54, 0, 57, 74, 66, 71, 73, 72, 76, 77, 70, 141, 143, 0, 139, 135, 142, 131, 134, 137, 140, 138, 133, 136, 132, 0, 167, 160, 83, 86, 79, 85, 80, 38, 91, 31, 90, 32, 39, 34, 157, 123, 0, 107, 113, 109, 69, 115, 78, 75, 117, 68, 62, 108, 106, 105, 116, 0, 181, 5, 8, 1, 11, 9, 180, 178, 0, 130, 169, 168, 163, 119, 162, 161, 129, 164, 165, 0, 84, 88, 81, 10, 3, 2, 12, 13, 4, 6, 7, 0, 154, 193, 184, 188, 191, 189, 195, 190, 192, 185, 0, 22, 15, 25, 19, 24, 21, 14, 183, 187, 194, 186, 0, 23, 26, 16, 18, 20, 17, 41, 43, 0, 44, 52, 46, 40, 49, 50, 51, 47, 42, 45, 48, 0, 148, 147, 151, 144, 149, 145, 146, 153, 156, 152, 155, 150, 0]
     best_route, best_cost, longueurs = tabu_search(initial_route, distances, quantite_dest, capacite, iterations, math.ceil(nb_dest/5))
 
     # Ajoutez le point de départ à la fin de l'itinéraire pour compléter le cycle
@@ -329,6 +313,9 @@ def test(iterations, test_name):
 
 # Example usage
 
-test(500,"archipels_small")
+test(100,"archipels_big")
+#save config à tracer
+#[0, 97, 96, 95, 94, 93, 98, 99, 0, 127, 126, 92, 101, 103, 100, 104, 102, 0, 53, 65, 55, 56, 58, 61, 64, 59, 0, 82, 27, 89, 87, 36, 37, 33, 29, 28, 30, 35, 124, 0, 173, 170, 182, 175, 176, 174, 179, 171, 177, 172, 0, 166, 128, 118, 120, 122, 158, 159, 125, 121, 0, 63, 114, 60, 67, 112, 111, 110, 54, 0, 57, 74, 66, 71, 73, 72, 76, 77, 70, 141, 143, 0, 139, 135, 142, 131, 134, 137, 140, 138, 133, 136, 132, 0, 167, 160, 83, 86, 79, 85, 80, 38, 91, 31, 90, 32, 39, 34, 157, 123, 0, 107, 113, 109, 69, 115, 78, 75, 117, 68, 62, 108, 106, 105, 116, 0, 181, 5, 8, 1, 11, 9, 180, 178, 0, 130, 169, 168, 163, 119, 162, 161, 129, 164, 165, 0, 84, 88, 81, 10, 3, 2, 12, 13, 4, 6, 7, 0, 154, 193, 184, 188, 191, 189, 195, 190, 192, 185, 0, 22, 15, 25, 19, 24, 21, 14, 183, 187, 194, 186, 0, 23, 26, 16, 18, 20, 17, 41, 43, 0, 44, 52, 46, 40, 49, 50, 51, 47, 42, 45, 48, 0, 148, 147, 151, 144, 149, 145, 146, 153, 156, 152, 155, 150, 0]
+
 
 
